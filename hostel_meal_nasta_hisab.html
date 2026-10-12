@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>হোস্টেল খাবার ও নাস্তা হিসাব</title>
+<style>
+:root{--ink:#243047;--muted:#667085;--line:#e5e7eb;--blue:#2457a7;--green:#177245;--red:#b42318}
+*{box-sizing:border-box}body{margin:0;background:#f4f6f8;color:var(--ink);font-family:Arial,"Noto Sans Bengali",sans-serif}
+header{background:linear-gradient(135deg,#fffdf8,#f1f5f9);padding:20px 14px 16px;text-align:center;border-bottom:1px solid var(--line)}header h1{margin:0;font-size:23px}header p{margin:7px 0 0;color:var(--muted);font-size:13px}
+.wrap{max-width:1000px;margin:auto;padding:12px}.clock{text-align:center;font-size:19px;font-weight:700;background:#fff;border:1px solid var(--line);border-radius:13px;padding:12px;margin-bottom:12px}
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}.card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:11px 5px;text-align:center}.card span{display:block;color:var(--muted);font-size:12px;margin-bottom:6px}.card strong{font-size:21px}
+.panel{background:#fff;border:1px solid var(--line);border-radius:14px;padding:13px;margin-bottom:12px}h2{font-size:17px;margin:0 0 12px}.row{display:flex;gap:8px;align-items:end;flex-wrap:wrap}.field{flex:1;min-width:130px}label{display:block;font-size:13px;margin-bottom:5px;color:#475467}
+input,select,button{font:inherit}input,select{width:100%;padding:10px;border:1px solid #d0d5dd;border-radius:9px;background:#fff;color:var(--ink)}button{border:0;border-radius:9px;padding:10px 12px;cursor:pointer;font-weight:700}.primary{background:var(--blue);color:white}.green{background:#e7f6ed;color:var(--green)}.red{background:#feeceb;color:var(--red)}.gray{background:#eef1f5;color:#344054}.small{padding:7px 9px;font-size:12px}
+.meal-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.meal-card{border:1px solid var(--line);border-radius:12px;padding:10px;background:#fcfcfd}.meal-card h3{margin:0 0 8px;font-size:15px}.meal-card .hint{font-size:11px;color:var(--muted);margin-top:6px}.meal-card select{margin-top:3px}
+.table-wrap{overflow-x:auto}table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:left;padding:9px 7px;border-bottom:1px solid var(--line);white-space:nowrap}th{background:#f8fafc;color:#475467;font-size:12px}.status{display:inline-block;padding:5px 8px;border-radius:20px;font-size:12px;font-weight:700}.on{background:#e7f6ed;color:var(--green)}.off{background:#feeceb;color:var(--red)}.actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}.note{font-size:12px;color:var(--muted);line-height:1.55}.empty{text-align:center;color:var(--muted);padding:18px}
+@media(max-width:600px){header h1{font-size:20px}.wrap{padding:9px}.panel{padding:11px}.meal-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.cards{gap:5px}.card strong{font-size:18px}.meal-card{padding:8px}.meal-card h3{font-size:14px}}
+</style>
+</head>
+<body>
+<header><h1>🏠 হোস্টেল খাবার ও নাস্তা হিসাব</h1><p>৩ বেলা খাবার + ৩ বেলা নাস্তা • দৈনিক ও মাসিক রিপোর্ট</p></header>
+<div class="wrap">
+<div class="clock" id="clock">লোড হচ্ছে…</div>
+<div class="cards">
+ <div class="card"><span>মোট সদস্য</span><strong id="totalMembers">০</strong></div>
+ <div class="card"><span>আজ মোট পরিবেশন</span><strong id="todayServed">০</strong></div>
+ <div class="card"><span>আজ মোট বন্ধ</span><strong id="todayOff">০</strong></div>
+</div>
+
+<section class="panel"><h2>১. তারিখ নির্বাচন</h2><div class="row"><div class="field"><label for="workDate">হিসাবের তারিখ</label><input type="date" id="workDate"></div><button class="gray" id="todayBtn">আজকের তারিখ</button></div><p class="note">প্রতিটি সদস্যের জন্য ৬টি সেবা আলাদাভাবে চালু/বন্ধ করতে পারবেন। নতুন তারিখে ডিফল্টভাবে সব সেবা চালু থাকবে।</p></section>
+
+<section class="panel"><h2>২. নতুন সদস্য যোগ করুন</h2><form id="addForm" class="row"><div class="field"><label for="memberName">সদস্যের নাম</label><input id="memberName" maxlength="60" placeholder="যেমন: আবদুল্লাহ" required></div><div class="field"><label for="roomNo">রুম/রোল (ঐচ্ছিক)</label><input id="roomNo" maxlength="30" placeholder="যেমন: ১০১"></div><button class="primary" type="submit">+ সদস্য যোগ</button></form></section>
+
+<section class="panel"><h2>৩. ছয় বেলার মিল ও নাস্তার হিসাব — <span id="dateLabel"></span></h2><div class="meal-grid" id="mealGrid"></div><p class="note">প্রতিটি বক্সে সদস্য নির্বাচন করে ওই বেলার সেবা চালু বা বন্ধ করুন। “সব চালু” বা “সব বন্ধ” শুধু নির্বাচিত তারিখের জন্য প্রযোজ্য।</p></section>
+
+<section class="panel"><h2>৪. সদস্যভিত্তিক হিসাব</h2><div class="table-wrap"><table><thead><tr><th>সদস্য</th><th>সকাল নাস্তা</th><th>দুপুর খাবার</th><th>বিকেল নাস্তা</th><th>রাত খাবার</th><th>রাতের নাস্তা</th><th>ভোরের নাস্তা</th><th>মোট</th><th>অ্যাকশন</th></tr></thead><tbody id="memberTable"></tbody></table></div><div class="actions"><button class="green" id="allOn">সব বেলা চালু</button><button class="red" id="allOff">সব বেলা বন্ধ</button></div></section>
+
+<section class="panel"><h2>৫. মাসিক রিপোর্ট</h2><div class="row"><div class="field"><label for="reportMonth">মাস নির্বাচন</label><input type="month" id="reportMonth"></div><button class="primary" id="showReport">রিপোর্ট দেখুন</button><button class="gray" id="exportCsv">CSV ডাউনলোড</button></div><div id="reportSummary" style="margin-top:12px"></div><div class="table-wrap"><table><thead><tr><th>তারিখ</th><th>সকাল নাস্তা</th><th>দুপুর খাবার</th><th>বিকেল নাস্তা</th><th>রাত খাবার</th><th>রাতের নাস্তা</th><th>ভোরের নাস্তা</th><th>মোট সেবা</th></tr></thead><tbody id="reportTable"></tbody></table></div></section>
+
+<section class="panel"><h2>৬. ডেটা ব্যাকআপ</h2><div class="actions"><button class="gray" id="backupBtn">ব্যাকআপ ডাউনলোড</button><label class="gray" style="display:inline-block;padding:10px 12px;border-radius:9px;cursor:pointer;font-weight:700">ব্যাকআপ ফিরিয়ে আনুন <input type="file" id="restoreFile" accept=".json,application/json" style="display:none"></label></div><p class="note">অ্যাপটি অফলাইনে কাজ করে। তথ্য এই ডিভাইসের ব্রাউজারে সেভ হয়। ব্রাউজারের ডেটা মুছে গেলে তথ্য হারাতে পারে, তাই ব্যাকআপ রাখুন।</p></section>
+</div>
+<script>
+const KEY='hostelMealTracker_v2';
+const MEALS=[
+ {id:'breakfast',name:'🌅 সকাল নাস্তা'},
+ {id:'lunch',name:'🍛 দুপুরের খাবার'},
+ {id:'afternoon',name:'☕ বিকেলের নাস্তা'},
+ {id:'dinner',name:'🍽️ রাতের খাবার'},
+ {id:'nightSnack',name:'🥛 রাতের নাস্তা'},
+ {id:'earlySnack',name:'🌄 ভোরের নাস্তা'}
+];
+const $=id=>document.getElementById(id);
+const todayISO=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
+const monthISO=()=>todayISO().slice(0,7);
+let data={members:[],records:{}};
+function load(){try{const raw=localStorage.getItem(KEY);if(raw){const p=JSON.parse(raw);if(Array.isArray(p.members)&&p.records)data=p;}}catch(e){}}
+function save(){localStorage.setItem(KEY,JSON.stringify(data));}
+function bn(n){return Number(n).toLocaleString('bn-BD');}
+function prettyDate(iso){if(!iso)return '';const [y,m,d]=iso.split('-');return `${d}-${m}-${y}`;}
+function isOn(date,mid,meal){return data.records[date]?.[mid]?.[meal]!==false;}
+function setOne(mid,meal,value){const date=$('workDate').value;if(!data.records[date])data.records[date]={};if(!data.records[date][mid])data.records[date][mid]={};data.records[date][mid][meal]=value;save();render();}
+function countMeal(date,meal){let n=0;data.members.forEach(m=>{if(isOn(date,m.id,meal))n++;});return n;}
+function render(){
+ const date=$('workDate').value||todayISO();$('dateLabel').textContent=prettyDate(date);$('totalMembers').textContent=bn(data.members.length);
+ const grid=$('mealGrid');grid.innerHTML='';
+ MEALS.forEach(meal=>{
+  const box=document.createElement('div');box.className='meal-card';
+  const h=document.createElement('h3');h.textContent=meal.name;box.appendChild(h);
+  const lab=document.createElement('label');lab.textContent='এই বেলার অবস্থা';box.appendChild(lab);
+  const sel=document.createElement('select');sel.innerHTML='<option value="all">সব সদস্য</option>'+data.members.map(m=>`<option value="${escapeHtml(m.id)}">${escapeHtml(m.name)}</option>`).join('');box.appendChild(sel);
+  const btns=document.createElement('div');btns.className='actions';
+  const on=document.createElement('button');on.className='green small';on.textContent='চালু';on.onclick=()=>{const ids=sel.value==='all'?data.members.map(m=>m.id):[sel.value];ids.forEach(id=>setRecordOnly(date,id,meal.id,true));save();render();};
+  const off=document.createElement('button');off.className='red small';off.textContent='বন্ধ';off.onclick=()=>{const ids=sel.value==='all'?data.members.map(m=>m.id):[sel.value];ids.forEach(id=>setRecordOnly(date,id,meal.id,false));save();render();};
+  btns.append(on,off);box.appendChild(btns);
+  const hint=document.createElement('div');hint.className='hint';hint.textContent=`চালু: ${bn(countMeal(date,meal.id))} জন`;box.appendChild(hint);grid.appendChild(box);
+ });
+ const tbody=$('memberTable');tbody.innerHTML='';let totalOn=0,totalOff=0;
+ data.members.forEach(m=>{
+  const tr=document.createElement('tr');const name=document.createElement('td');name.textContent=m.name+(m.room?' ('+m.room+')':'');tr.appendChild(name);let count=0;
+  MEALS.forEach(meal=>{const td=document.createElement('td');const on=isOn(date,m.id,meal.id);if(on)count++;const b=document.createElement('button');b.className='small '+(on?'green':'red');b.textContent=on?'চালু':'বন্ধ';b.title=meal.name+' পরিবর্তন';b.onclick=()=>setOne(m.id,meal.id,!on);td.appendChild(b);tr.appendChild(td);});
+  totalOn+=count;totalOff+=MEALS.length-count;const total=document.createElement('td');total.textContent=bn(count)+' / ৬';tr.appendChild(total);
+  const act=document.createElement('td');const del=document.createElement('button');del.className='small gray';del.textContent='মুছুন';del.onclick=()=>{if(confirm(m.name+'-কে সদস্য তালিকা থেকে মুছবেন?')){data.members=data.members.filter(x=>x.id!==m.id);save();render();renderReport();}};act.appendChild(del);tr.appendChild(act);tbody.appendChild(tr);
+ });
+ if(!data.members.length)tbody.innerHTML='<tr><td colspan="9" class="empty">এখনো সদস্য যোগ করা হয়নি। উপরে নাম লিখে সদস্য যোগ করুন।</td></tr>';
+ $('todayServed').textContent=bn(totalOn);$('todayOff').textContent=bn(totalOff);
+}
+function setRecordOnly(date,mid,meal,value){if(!data.records[date])data.records[date]={};if(!data.records[date][mid])data.records[date][mid]={};data.records[date][mid][meal]=value;}
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function renderReport(){
+ const month=$('reportMonth').value||monthISO();const body=$('reportTable');body.innerHTML='';const [yy,mm]=month.split('-').map(Number);const days=new Date(yy,mm,0).getDate();let sums=MEALS.map(()=>0),grand=0;
+ for(let day=1;day<=days;day++){const date=`${month}-${String(day).padStart(2,'0')}`;const vals=MEALS.map(meal=>countMeal(date,meal.id));vals.forEach((v,i)=>sums[i]+=v);const total=vals.reduce((a,b)=>a+b,0);grand+=total;const tr=document.createElement('tr');[prettyDate(date),...vals.map(bn),bn(total)].forEach(v=>{const td=document.createElement('td');td.textContent=v;tr.appendChild(td);});body.appendChild(tr);}
+ $('reportSummary').innerHTML='<div class="cards">'+MEALS.map((m,i)=>`<div class="card"><span>${m.name}</span><strong>${bn(sums[i])}</strong><span>সদস্য-সেবা</span></div>`).join('')+`<div class="card"><span>মাসে মোট সেবা</span><strong>${bn(grand)}</strong></div></div><p class="note">সংখ্যাগুলো সদস্য-সেবার যোগফল। যেমন, একজন সদস্যের সকাল নাস্তা ও দুপুরের খাবার চালু থাকলে তা ২টি সেবা হিসেবে গণনা হবে।</p>`;
+}
+function csvDownload(){const month=$('reportMonth').value||monthISO();const [yy,mm]=month.split('-').map(Number);const days=new Date(yy,mm,0).getDate();const rows=[['তারিখ',...MEALS.map(m=>m.name),'মোট সেবা']];for(let d=1;d<=days;d++){const date=`${month}-${String(d).padStart(2,'0')}`;const vals=MEALS.map(m=>countMeal(date,m.id));rows.push([prettyDate(date),...vals,vals.reduce((a,b)=>a+b,0)]);}const csv='﻿'+rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\r\n');downloadBlob(csv,`hostel-meal-${month}.csv`,'text/csv;charset=utf-8;');}
+function downloadBlob(content,name,type){const a=document.createElement('a');const url=URL.createObjectURL(new Blob([content],{type}));a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
+$('addForm').addEventListener('submit',e=>{e.preventDefault();const name=$('memberName').value.trim();if(!name)return;data.members.push({id:Date.now().toString(36)+Math.random().toString(36).slice(2,7),name,room:$('roomNo').value.trim()});save();$('memberName').value='';$('roomNo').value='';render();renderReport();});
+$('workDate').onchange=render;$('todayBtn').onclick=()=>{$('workDate').value=todayISO();render();};
+$('allOn').onclick=()=>{if(!confirm('এই তারিখে সবার ছয় বেলা চালু করবেন?'))return;const date=$('workDate').value;data.members.forEach(m=>MEALS.forEach(meal=>setRecordOnly(date,m.id,meal.id,true)));save();render();};
+$('allOff').onclick=()=>{if(!confirm('এই তারিখে সবার ছয় বেলা বন্ধ করবেন?'))return;const date=$('workDate').value;data.members.forEach(m=>MEALS.forEach(meal=>setRecordOnly(date,m.id,meal.id,false)));save();render();};
+$('showReport').onclick=renderReport;$('exportCsv').onclick=csvDownload;
+$('backupBtn').onclick=()=>downloadBlob(JSON.stringify(data,null,2),'hostel-meal-backup.json','application/json');
+$('restoreFile').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const p=JSON.parse(await f.text());if(!Array.isArray(p.members)||!p.records)throw 0;if(confirm('ব্যাকআপের তথ্য দিয়ে বর্তমান তথ্য বদলাবেন?')){data=p;save();render();renderReport();alert('ব্যাকআপ ফিরিয়ে আনা হয়েছে।');}}catch(err){alert('সঠিক ব্যাকআপ ফাইল নির্বাচন করুন।');}e.target.value='';};
+function tick(){$('clock').textContent=new Date().toLocaleString('bn-BD',{weekday:'long',year:'numeric',month:'long',day:'numeric',hour:'2-digit',minute:'2-digit',second:'2-digit'});}
+load();$('workDate').value=todayISO();$('reportMonth').value=monthISO();tick();setInterval(tick,1000);render();renderReport();
+</script>
+</body>
+</html>
